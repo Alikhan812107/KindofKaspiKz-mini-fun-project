@@ -5,54 +5,31 @@ import (
 	"transaction-service/internal/domain"
 )
 
-type TransactionRepo struct {
+type PaymentRepo struct {
 	db *sql.DB
 }
 
-func NewTransactionRepo(db *sql.DB) *TransactionRepo {
-	return &TransactionRepo{db: db}
+func NewPaymentRepo(db *sql.DB) *PaymentRepo {
+	return &PaymentRepo{db: db}
 }
 
-func (r *TransactionRepo) Create(tx *domain.Transaction) error {
-	query := `
-		INSERT INTO transactions (id, purchase_id, transaction_id, amount, status)
-		VALUES ($1, $2, $3, $4, $5)
-	`
-
-	_, err := r.db.Exec(query,
-		tx.ID,
-		tx.PurchaseID,
-		tx.TransactionID,
-		tx.Amount,
-		tx.Status,
+func (r *PaymentRepo) Create(p *domain.Payment) error {
+	_, err := r.db.Exec(
+		`INSERT INTO payments (id, order_id, transaction_id, amount, status) VALUES ($1,$2,$3,$4,$5)`,
+		p.ID, p.OrderID, p.TransactionID, p.Amount, p.Status,
 	)
 
 	return err
 }
 
-func (r *TransactionRepo) GetByPurchaseID(purchaseID string) (*domain.Transaction, error) {
-	query := `
-		SELECT id, purchase_id, transaction_id, amount, status
-		FROM transactions
-		WHERE purchase_id = $1
-		LIMIT 1
-	`
-
-	row := r.db.QueryRow(query, purchaseID)
-
-	tx := &domain.Transaction{}
-
-	err := row.Scan(
-		&tx.ID,
-		&tx.PurchaseID,
-		&tx.TransactionID,
-		&tx.Amount,
-		&tx.Status,
+func (r *PaymentRepo) GetByOrderID(orderID string) (*domain.Payment, error) {
+	row := r.db.QueryRow(
+		`SELECT id, order_id, transaction_id, amount, status FROM payments WHERE order_id=$1 LIMIT 1`, orderID,
 	)
-
+	p := &domain.Payment{}
+	err := row.Scan(&p.ID, &p.OrderID, &p.TransactionID, &p.Amount, &p.Status)
 	if err != nil {
 		return nil, err
 	}
-
-	return tx, nil
+	return p, nil
 }

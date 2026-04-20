@@ -2,7 +2,7 @@ package repository
 
 import "transaction-service/internal/domain"
 
-type TransactionRepository interface {
-	Create(tx *domain.Transaction) error
-	GetByPurchaseID(purchaseID string) (*domain.Transaction, error)
+type PaymentRepository interface {
+	Create(p *domain.Payment) error
+	GetByOrderID(orderID string) (*domain.Payment, error)
 }

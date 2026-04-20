@@ -5,7 +5,6 @@ import (
 	"log"
 
 	httpTransport "transaction-service/internal/transport/http"
-
 	"transaction-service/internal/repository/postgres"
 	"transaction-service/internal/usecase"
 
@@ -14,21 +13,18 @@ import (
 )
 
 func Run() {
-	// DB connection
-	db, err := sql.Open("postgres", "postgres://postgres:password@localhost:5432/transaction_db?sslmode=disable")
+	db, err := sql.Open("postgres", "postgres://postgres:0000@localhost:5432/transaction_db?sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// layers
-	repo := postgres.NewTransactionRepo(db)
-	uc := usecase.NewTransactionUsecase(repo)
+	repo := postgres.NewPaymentRepo(db)
+	uc := usecase.NewPaymentUsecase(repo)
 	handler := httpTransport.NewHandler(uc)
 
-	// server
 	r := gin.Default()
 	handler.RegisterRoutes(r)
 
-	log.Println("Transaction Service running on :8081")
+	log.Println("Payment Service running on :8081")
 	r.Run(":8081")
 }

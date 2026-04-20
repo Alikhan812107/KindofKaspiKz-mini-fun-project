@@ -1,9 +1,9 @@
 package domain
 
-type Transaction struct {
+type Payment struct {
 	ID            string
-	PurchaseID    string
+	OrderID       string
 	TransactionID string
 	Amount        int64
-	Status        string // "Authorized" or "Declined"
+	Status        string
 }

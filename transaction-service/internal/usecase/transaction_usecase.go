@@ -8,41 +8,38 @@ import (
 	"github.com/google/uuid"
 )
 
-type TransactionUsecase struct {
-	repo repository.TransactionRepository
+type PaymentUsecase struct {
+	repo repository.PaymentRepository
 }
 
-func NewTransactionUsecase(r repository.TransactionRepository) *TransactionUsecase {
-	return &TransactionUsecase{repo: r}
+func NewPaymentUsecase(r repository.PaymentRepository) *PaymentUsecase {
+	return &PaymentUsecase{repo: r}
 }
 
-func (uc *TransactionUsecase) CreateTransaction(purchaseID string, amount int64) (*domain.Transaction, error) {
+func (uc *PaymentUsecase) CreatePayment(orderID string, amount int64) (*domain.Payment, error) {
 	if amount <= 0 {
-		return nil, errors.New("amount must be greater than 0")
+		return nil, errors.New("amount must be > 0")
 	}
 
 	status := "Authorized"
-
 	if amount > 100000 {
 		status = "Declined"
 	}
 
-	tx := &domain.Transaction{
+	p := &domain.Payment{
 		ID:            uuid.New().String(),
-		PurchaseID:    purchaseID,
+		OrderID:       orderID,
 		TransactionID: uuid.New().String(),
 		Amount:        amount,
 		Status:        status,
 	}
 
-	err := uc.repo.Create(tx)
-	if err != nil {
+	if err := uc.repo.Create(p); err != nil {
 		return nil, err
 	}
-
-	return tx, nil
+	return p, nil
 }
 
-func (uc *TransactionUsecase) GetByPurchaseID(purchaseID string) (*domain.Transaction, error) {
-	return uc.repo.GetByPurchaseID(purchaseID)
+func (uc *PaymentUsecase) GetByOrderID(orderID string) (*domain.Payment, error) {
+	return uc.repo.GetByOrderID(orderID)
 }

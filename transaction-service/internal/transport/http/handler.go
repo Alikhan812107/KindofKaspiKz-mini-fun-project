@@ -9,48 +9,42 @@ import (
 )
 
 type Handler struct {
-	usecase *usecase.TransactionUsecase
+	uc *usecase.PaymentUsecase
 }
 
-func NewHandler(uc *usecase.TransactionUsecase) *Handler {
-	return &Handler{usecase: uc}
+func NewHandler(uc *usecase.PaymentUsecase) *Handler {
+	return &Handler{uc: uc}
 }
 
-type createRequest struct {
-	PurchaseID string `json:"purchase_id"`
-	Amount     int64  `json:"amount"`
-}
-
-func (h *Handler) CreateTransaction(c *gin.Context) {
-	var req createRequest
-
+func (h *Handler) CreatePayment(c *gin.Context) {
+	var req struct {
+		OrderID string `json:"order_id"`
+		Amount  int64  `json:"amount"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	tx, err := h.usecase.CreateTransaction(req.PurchaseID, req.Amount)
+	p, err := h.uc.CreatePayment(req.OrderID, req.Amount)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, tx)
+	c.JSON(http.StatusOK, p)
 }
 
-func (h *Handler) GetTransaction(c *gin.Context) {
-	purchaseID := c.Param("purchase_id")
-
-	tx, err := h.usecase.GetByPurchaseID(purchaseID)
+func (h *Handler) GetPayment(c *gin.Context) {
+	orderID := c.Param("order_id")
+	p, err := h.uc.GetByOrderID(orderID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
-
-	c.JSON(http.StatusOK, tx)
+	c.JSON(http.StatusOK, p)
 }
 
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
-	r.POST("/transactions", h.CreateTransaction)
-	r.GET("/transactions/:purchase_id", h.GetTransaction)
+	r.POST("/payments", h.CreatePayment)
+	r.GET("/payments/:order_id", h.GetPayment)
 }
