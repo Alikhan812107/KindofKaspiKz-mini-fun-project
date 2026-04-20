@@ -1,27 +1,28 @@
 package usecase
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"errors"
-	"net/http"
 	"time"
 
 	"purchase-service/internal/domain"
 	"purchase-service/internal/repository"
+	pb "purchase-service/pkg/pb/payment"
 
 	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type PurchaseUsecase struct {
-	repo   repository.PurchaseRepository
-	client *http.Client
+	repo          repository.PurchaseRepository
+	paymentClient pb.PaymentServiceClient
 }
 
-func NewPurchaseUsecase(repo repository.PurchaseRepository) *PurchaseUsecase {
+func NewPurchaseUsecase(repo repository.PurchaseRepository, paymentClient pb.PaymentServiceClient) *PurchaseUsecase {
 	return &PurchaseUsecase{
-		repo:   repo,
-		client: &http.Client{Timeout: 5 * time.Second},
+		repo:          repo,
+		paymentClient: paymentClient,
 	}
 }
 
@@ -43,25 +44,26 @@ func (uc *PurchaseUsecase) CreatePurchase(customerID, item string, amount int64)
 		return nil, err
 	}
 
-	body, _ := json.Marshal(map[string]interface{}{
-		"order_id": p.ID,
-		"amount":   p.Amount,
-	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	resp, err := uc.client.Post("http://localhost:8081/payments", "application/json", bytes.NewBuffer(body))
+	resp, err := uc.paymentClient.ProcessPayment(ctx, &pb.PaymentRequest{
+		OrderId: p.ID,
+		Amount:  p.Amount,
+	})
 	if err != nil {
+		st, _ := status.FromError(err)
+		if st.Code() == codes.Unavailable {
+			uc.repo.UpdateStatus(p.ID, "Failed")
+			p.Status = "Failed"
+			return p, errors.New("payment service unavailable")
+		}
 		uc.repo.UpdateStatus(p.ID, "Failed")
 		p.Status = "Failed"
-		return p, errors.New("payment service unavailable")
+		return p, err
 	}
-	defer resp.Body.Close()
 
-	var txResp struct {
-		Status string `json:"status"`
-	}
-	json.NewDecoder(resp.Body).Decode(&txResp)
-
-	if txResp.Status == "Authorized" {
+	if resp.Status == "Authorized" {
 		p.Status = "Paid"
 	} else {
 		p.Status = "Failed"
