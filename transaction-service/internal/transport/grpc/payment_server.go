@@ -2,12 +2,14 @@ package grpc
 
 import (
 	"context"
+	"time"
 
 	"transaction-service/internal/usecase"
 	pb "transaction-service/pkg/pb/payment"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type PaymentServer struct {
@@ -36,5 +38,6 @@ func (s *PaymentServer) ProcessPayment(ctx context.Context, req *pb.PaymentReque
 		PaymentId:     payment.ID,
 		TransactionId: payment.TransactionID,
 		Status:        payment.Status,
+		CreatedAt:     timestamppb.New(time.Now()),
 	}, nil
 }

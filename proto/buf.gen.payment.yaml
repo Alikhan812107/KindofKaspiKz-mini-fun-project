@@ -1,0 +1,14 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ../transaction-service/pkg/pb
+    opt: paths=source_relative
+  - remote: buf.build/grpc/go
+    out: ../transaction-service/pkg/pb
+    opt: paths=source_relative
+  - remote: buf.build/protocolbuffers/go
+    out: ../purchase-service/pkg/pb
+    opt: paths=source_relative
+  - remote: buf.build/grpc/go
+    out: ../purchase-service/pkg/pb
+    opt: paths=source_relative

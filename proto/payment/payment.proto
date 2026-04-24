@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package payment;
 
-option go_package = "github.com/youruser/generated-protos/payment";
+option go_package = "transaction-service/pkg/pb/payment;payment";
 
 import "google/protobuf/timestamp.proto";
 
@@ -12,12 +12,12 @@ service PaymentService {
 
 message PaymentRequest {
   string order_id = 1;
-  int64  amount   = 2;
+  int64 amount = 2;
 }
 
 message PaymentResponse {
-  string                    payment_id     = 1;
-  string                    transaction_id = 2;
-  string                    status         = 3;
-  google.protobuf.Timestamp created_at     = 4;
+  string payment_id = 1;
+  string transaction_id = 2;
+  string status = 3;
+  google.protobuf.Timestamp created_at = 4;
 }

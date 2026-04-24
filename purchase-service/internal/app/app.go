@@ -6,7 +6,6 @@ import (
 	"net"
 	"os"
 
-	_ "purchase-service/pkg/codec"
 	grpcTransport "purchase-service/internal/transport/grpc"
 	httpTransport "purchase-service/internal/transport/http"
 	"purchase-service/internal/repository"
@@ -16,9 +15,9 @@ import (
 	paymentpb "purchase-service/pkg/pb/payment"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	_ "github.com/lib/pq"
 )
 
 func Run() {

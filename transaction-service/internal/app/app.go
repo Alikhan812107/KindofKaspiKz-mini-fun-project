@@ -1,12 +1,13 @@
 package app
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net"
 	"os"
+	"time"
 
-	_ "transaction-service/pkg/codec"
 	grpcTransport "transaction-service/internal/transport/grpc"
 	httpTransport "transaction-service/internal/transport/http"
 	"transaction-service/internal/repository/postgres"
@@ -14,9 +15,16 @@ import (
 	pb "transaction-service/pkg/pb/payment"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc"
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 )
+
+func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	start := time.Now()
+	resp, err := handler(ctx, req)
+	log.Printf("gRPC method=%s duration=%s err=%v", info.FullMethod, time.Since(start), err)
+	return resp, err
+}
 
 func Run() {
 	dsn := os.Getenv("DATABASE_URL")
@@ -57,7 +65,7 @@ func runGRPC(uc *usecase.PaymentUsecase) {
 		log.Fatalf("failed to listen on grpc port: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(loggingInterceptor))
 	pb.RegisterPaymentServiceServer(s, grpcTransport.NewPaymentServer(uc))
 
 	log.Printf("Payment Service gRPC running on :%s", grpcPort)

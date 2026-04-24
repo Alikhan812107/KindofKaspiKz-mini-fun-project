@@ -1,0 +1,32 @@
+version: v2
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ../purchase-service/pkg/pb/order
+    opt: paths=source_relative
+    inputs:
+      - path: order
+  - remote: buf.build/grpc/go
+    out: ../purchase-service/pkg/pb/order
+    opt: paths=source_relative
+    inputs:
+      - path: order
+  - remote: buf.build/protocolbuffers/go
+    out: ../transaction-service/pkg/pb/payment
+    opt: paths=source_relative
+    inputs:
+      - path: payment
+  - remote: buf.build/grpc/go
+    out: ../transaction-service/pkg/pb/payment
+    opt: paths=source_relative
+    inputs:
+      - path: payment
+  - remote: buf.build/protocolbuffers/go
+    out: ../purchase-service/pkg/pb/payment
+    opt: paths=source_relative
+    inputs:
+      - path: payment
+  - remote: buf.build/grpc/go
+    out: ../purchase-service/pkg/pb/payment
+    opt: paths=source_relative
+    inputs:
+      - path: payment

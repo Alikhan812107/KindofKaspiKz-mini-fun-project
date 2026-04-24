@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type OrderServer struct {
@@ -19,9 +20,7 @@ func NewOrderServer(repo repository.PurchaseRepository) *OrderServer {
 	return &OrderServer{repo: repo}
 }
 
-// SubscribeToOrderUpdates streams order status updates to the client.
-// It polls the database every second and pushes a message whenever the status changes.
-func (s *OrderServer) SubscribeToOrderUpdates(req *pb.OrderRequest, stream pb.OrderServiceServer_SubscribeToOrderUpdatesServer) error {
+func (s *OrderServer) SubscribeToOrderUpdates(req *pb.OrderRequest, stream pb.OrderService_SubscribeToOrderUpdatesServer) error {
 	if req.OrderId == "" {
 		return status.Error(codes.InvalidArgument, "order_id is required")
 	}
@@ -45,7 +44,7 @@ func (s *OrderServer) SubscribeToOrderUpdates(req *pb.OrderRequest, stream pb.Or
 			err := stream.Send(&pb.OrderStatusUpdate{
 				OrderId:   order.ID,
 				Status:    order.Status,
-				UpdatedAt: time.Now().Format(time.RFC3339),
+				UpdatedAt: timestamppb.New(time.Now()),
 			})
 			if err != nil {
 				return err
